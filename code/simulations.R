@@ -11,7 +11,7 @@ options(cores=3)
 registerDoParallel()
 
 ##### SET UP THE SIMULATION PARAMETERS AND RESULTS PLACEHOLDER #################
-B_variants <- c(1000)
+B_variants <- c(1)
 n_variants <- c(100)
 n.new_variants <- c(100)
 nk_variants <- c(5, 6)
@@ -21,7 +21,7 @@ par2sin_variants <- c(0.25)
 par3sin_variants <- c(0.25)
 par4sin_variants <- 1:4 # all interesting variants for par4sin (how many cycles in [0, 1])
 par5sin_variants <- c(0, 0.25, 0.5, 0.75) # variants for par5sin (curve offset in multiples of 2*Pi)
-tmax_variants <- c(1, 2, 3)
+tmax_variants <- c(1, 2, 365)
 add_trend_variants <- c(TRUE, FALSE)
 par1trend_variants <- c(1)
 par2trend_variants <- c(0.1)
@@ -30,7 +30,7 @@ par4trend_variants <- c(1/10)
 par5trend_variants <- c(0)
 max_prob_value_variants <- c(0.95)
 min_prob_variants <- c(0.05)
-quantiles.cs_variants <- list(c(0.05, 0.25, 0.5, 0.75, 0.95))
+quantiles.cs_variants <- list(c(NULL)) # list(c(NULL), c(0.05, 0.25, 0.5, 0.75, 0.95)) 
 # construct all interesting combinations of par4sin nad par5sin
 results_index <- expand.grid(
   B=B_variants,
@@ -59,15 +59,24 @@ strings <- apply(X = results_index, FUN = paste, MARGIN = 1, collapse = ",")
 hashes <- unlist(lapply(X = strings, FUN = digest))
 results_index[, "hash"] <- unlist(hashes)
 results_list <- list() # placeholder for results
+# folder to save results into
+getwd()
+results_folder <- "./results/test"
 ##### SIMULATE ! ###############################################################
 system.time({ # time running of simulations
-  results_list <- foreach (line = 1:dim(results_index)[1],
+  # results_list <- 
+  files <- list.files(path = results_folder)  
+  
+    foreach (line = 1:dim(results_index)[1],
                   .final = function(x) setNames(x, results_index[, "hash"]),
                   .inorder = TRUE,
                   .errorhandling = "pass") %dopar%  {
     
     hash <- results_index[line, "hash"]
     print(hash) # print out hash, for debugging sake
+  
+    # if file with has exists, skip this simulation
+    if (any(grepl(pattern = hash, x = files))) {next}
     
     result <- f.sim.per.splines(B = results_index[line, "B"],
                                 n = results_index[line, "n"], 
@@ -93,13 +102,14 @@ system.time({ # time running of simulations
                                 ) 
     # result <- dummy
     # browser()
-    return(result)
+    # return(result)
+    save(result, file = paste0(results_folder, "/", hash, ".Rdata"))
     }
   })
-# str(results_list)
+str(results_list)
 ##### SAVE RESULTS #############################################################
-save(results_list, file = "~/Sync/Projects/Sklop2_simulations/results/simulation_variant5_192sims/results_list.Rdata")
-
+# save(results_list, file = "~/Sync/Projects/Sklop2_simulations/results/simulation_variant5_192sims/results_list.Rdata")
+save(results_index, file = paste0(results_folder, "/", "results_index.Rdata"))
 #### FUNCTION TO LOOK INTO SAVED RESULTS #######################################
 # TODO: add saving estimated models for each simluation? so they can be plotted with real curve?
 # TODO: save results into PDF?; make a table of results
@@ -144,7 +154,7 @@ look_at_simulation <- function(hash, results_list) {
 
 #### THE ACTUAL LOOKING INTO THE RESULTS #######################################
 load("results_list.Rdata")
-look_at_simulation(hash = "42e639135bf16607d3e363d850a9c155", results_list)
+look_at_simulation(hash = "7fe65c226c7cd0faf9422dc2a4933714", results_list)
 look_at_simulation(par4sin = 1, par5sin = 0, results_list = results_list) # "normal" variant of sine curve
 look_at_simulation(par4sin = 1, par5sin = 0.25, results_list = results_list) # shifted curve - a cosine instead of sine
 look_at_simulation(par4sin = 2, par5sin = 0, results_list = results_list) # sine curve, but with two cycles in period
