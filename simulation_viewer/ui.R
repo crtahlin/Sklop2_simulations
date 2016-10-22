@@ -22,9 +22,9 @@ shinyUI(fluidPage(
   ),
   
   mainPanel(
-    DT::dataTableOutput("results_index")
+    DT::dataTableOutput("results_index"),
   #  textOutput("results_hashes"),
-  #  plotOutput("plot_probability")
+    plotOutput("plot_probability")
   )
   
   
