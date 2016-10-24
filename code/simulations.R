@@ -32,7 +32,7 @@ max_prob_value_variants <- c(0.95)
 min_prob_variants <- c(0.05)
 quantiles.cs_variants <- list(c(NULL)) # list(c(NULL), c(0.05, 0.25, 0.5, 0.75, 0.95)) 
 # construct all interesting combinations of par4sin nad par5sin
-results_index <- expand.grid(
+results_index_temp <- expand.grid(
   B=B_variants,
   n=n_variants,
   n.new=n.new_variants,
@@ -55,13 +55,20 @@ results_index <- expand.grid(
   quantiles.cs=quantiles.cs_variants,
   set_seed = 1234)
 # calculate their hash value, to keep as index
-strings <- apply(X = results_index, FUN = paste, MARGIN = 1, collapse = ",")
+strings <- apply(X = results_index_temp, FUN = paste, MARGIN = 1, collapse = ",")
 hashes <- unlist(lapply(X = strings, FUN = digest))
-results_index[, "hash"] <- unlist(hashes)
+results_index_temp[, "hash"] <- unlist(hashes)
 # results_list <- list() # placeholder for results
 # folder to save results into
 getwd()
 results_folder <- "./results/simulations_individualy"
+# merge with existing results_index
+load(file=paste0(results_folder, "/results_index.Rdata")) # load existing
+str(results_index)
+str(results_index_temp)
+results_index <- unique(rbind(results_index, results_index_temp)) # merge, keep only unique
+save(results_index, file = paste0(results_folder, "/", "results_index.Rdata")) # save merged
+
 ##### SIMULATE ! ###############################################################
 system.time({ # time running of simulations
   # results_list <- 
@@ -109,7 +116,7 @@ system.time({ # time running of simulations
 str(results_list)
 ##### SAVE RESULTS #############################################################
 # save(results_list, file = "~/Sync/Projects/Sklop2_simulations/results/simulation_variant5_192sims/results_list.Rdata")
-save(results_index, file = paste0(results_folder, "/", "results_index.Rdata"))
+
 #### FUNCTION TO LOOK INTO SAVED RESULTS #######################################
 # TODO: add saving estimated models for each simluation? so they can be plotted with real curve?
 # TODO: save results into PDF?; make a table of results
