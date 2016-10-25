@@ -83,7 +83,10 @@ shinyServer(function(input, output) {
                     add_trend = results()$add_trend,
                     max_prob_value = results()$max_prob_value,
                     min_prob_value = results()$min_prob_value),
-      from = 0, to = results()$tmax, main = "Probability function used in simulation")
+      from = 0,
+      to = results()$tmax,
+      main = "Probability function used in simulation",
+      ylab = "Probability")
 
   })
   
