@@ -87,7 +87,7 @@ shinyServer(function(input, output) {
       to = results()$tmax,
       main = "Probability function used in simulation",
       ylab = "Probability")
-
+        
   })
   
   output$averages <- DT::renderDataTable({
@@ -102,6 +102,71 @@ shinyServer(function(input, output) {
       cs.per = c(brier.cs.per.train, brier.cs.per, AUCTrainEst.cs.per, AUCNewEst.cs.per, cal.cs.per.1, cal.cs.per.2, lrt.p.value.cs.per.train, score.p.value.cs.per.train),
       row.names = c("Brier - train", "Brier - test", "AUC - train", "AUC - test", "Calibration intercept", "Calibration slope", "LRT P value", "Score P value")
     ) 
+  })
+  
+  output$plot_simulations_estimates <- renderPlot({
+    
+    # prepare parameters
+    par(mfrow=c(2,3))
+    set.seed(results()$set_seed)
+    sample_size <- 30
+    which.use <- sample(results()$B, sample_size)
+    x.test.points <- results()$x.test.points
+    lp.coverage.rcs.train <- results()$lp.coverage.rcs.train
+    lp.coverage.rcs.per.train <- results()$lp.coverage.rcs.per.train
+    lp.coverage.cs.per.train <- results()$lp.coverage.cs.per.train
+    num.test.points <- results()$num.test.points
+    x.transf.2.lp <- results()$x.transf.2.lp
+    x <- results()$x
+    
+    # multiple estimated curves
+    # RCS 
+    matplot(x.test.points, 
+            t(lp.coverage.rcs.train[which.use, (1+2*num.test.points):(3*num.test.points)]),
+            type="l", main="RCS", ylim=c(-4,4), col="gray", xlab="x", ylab="Estimated LP",
+            cex.main=1, cex.lab=1, cex.axes=1)
+    lines(x[order(x)], x.transf.2.lp[order(x)], lwd=4)
+    
+    # RCS.PER
+    matplot(x.test.points,
+            t(lp.coverage.rcs.per.train[which.use, (1+2*num.test.points):(3*num.test.points)]),
+            type="l", main="RCS Periodic", ylim=c(-4,4), col="gray", xlab="x", ylab="Estimated LP",
+            cex.main=1, cex.lab=1, cex.axes=1)
+    lines(x[order(x)], x.transf.2.lp[order(x)], lwd=4)
+    
+    # CS.PER
+    matplot(x.test.points,
+            t(lp.coverage.cs.per.train[which.use, (1+2*num.test.points):(3*num.test.points)]),
+            type="l", main="CS Periodic", ylim=c(-4,4), col="gray", xlab="x", ylab="Estimated LP",
+            cex.main=1, cex.lab=1, cex.axes=1)
+    lines(x[order(x)], x.transf.2.lp[order(x)], lwd=4)
+    
+    
+    # average estimated curve
+    # RCS
+    my.mat=apply(lp.coverage.rcs.train[, -c(1:num.test.points)], 2, mean)
+    plot(x.test.points, my.mat[1:num.test.points], type="l", ylim=c(-4,4), lty=2, main="RCS", ylab="Estimated LP", xlab="x")
+    lines(x.test.points,my.mat[(2*num.test.points+1):(3*num.test.points)], lty=2)
+    
+    lines(x[order(x)], x.transf.2.lp[order(x)], lwd=4)
+    lines(x.test.points, my.mat[(num.test.points+1):(2*num.test.points)], type="l", lwd=4, col="gray")
+    
+    # RCS.PER
+    my.mat=apply(lp.coverage.rcs.per.train[, -c(1:num.test.points)], 2, mean)
+    plot(x.test.points, my.mat[1:num.test.points], type="l", ylim=c(-4,4),  lty=2, main="RCS periodic", ylab="Estimated LP", xlab="x")
+    lines(x.test.points,my.mat[(2*num.test.points+1):(3*num.test.points)],  lty=2)
+    
+    lines(x[order(x)], x.transf.2.lp[order(x)], lwd=4)
+    lines(x.test.points, my.mat[(num.test.points+1):(2*num.test.points)], type="l", lwd=4, col="gray")
+    
+    # CS.PER
+    my.mat=apply(lp.coverage.cs.per.train[, -c(1:num.test.points)], 2, mean)
+    plot(x.test.points, my.mat[1:num.test.points], type="l", ylim=c(-4,4), lty=2, main="CS periodic", ylab="Estimated LP", xlab="x")
+    lines(x.test.points,my.mat[(2*num.test.points+1):(3*num.test.points)], lty=2)
+    
+    lines(x[order(x)], x.transf.2.lp[order(x)], lwd=4)
+    lines(x.test.points, my.mat[(num.test.points+1):(2*num.test.points)], type="l", lwd=4, col="gray")
+    
     
   })
   
