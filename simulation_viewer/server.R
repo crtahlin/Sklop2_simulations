@@ -166,8 +166,43 @@ shinyServer(function(input, output) {
     
     lines(x[order(x)], x.transf.2.lp[order(x)], lwd=4)
     lines(x.test.points, my.mat[(num.test.points+1):(2*num.test.points)], type="l", lwd=4, col="gray")
+  })
+  
+  output$plot_coverage <- renderPlot({
+    # establish parameters
+    # browser()
+    my.res <- results()
+    # x.test.points <- results()$x.test.points
+    # lp.coverage.rcs.train <- results()$lp.coverage.rcs.train
+    # lp.coverage.rcs.per.train <- results()$lp.coverage.rcs.per.train
+    # lp.coverage.cs.per.train <- results()$lp.coverage.cs.per.train
+    # num.test.points <- results()$num.test.points
+    # 
+    par(mfrow=c(1,3))
     
+    # RCS
+    plot(my.res$x.test.points,
+         apply(my.res$lp.coverage.rcs.train[,1:my.res$num.test.points], 2, mean) ,
+         ylim=c(0.80, 1), xlab="x", ylab="Coverage", main="RCS", cex.main=2, cex.lab=1.5, cex.axix=2)
     
+    abline(v=my.res$knots, lty=2)
+    abline(h=0.95, lty=2)
+    
+    # RCS PER
+    plot(my.res$x.test.points,
+         apply(my.res$lp.coverage.rcs.per.train[,1:my.res$num.test.points], 2, mean),
+         ylim=c(0.80, 1), xlab="x", ylab="Coverage", main="RCS Periodic", cex.main=2, cex.lab=1.5, cex.axix=2)
+    
+    abline(v=my.res$knots, lty=2)
+    abline(h=0.95, lty=2)
+    
+    # CS.PER
+    plot(my.res$x.test.points,
+         apply(my.res$lp.coverage.cs.per.train[,1:my.res$num.test.points], 2, mean),
+         ylim=c(0.80, 1), xlab="x", ylab="Coverage", main="CS Periodic", cex.main=2, cex.lab=1.5, cex.axix=2)
+    
+    abline(v=my.res$knots.cs, lty=2)
+    abline(h=0.95, lty=2)
   })
   
 })

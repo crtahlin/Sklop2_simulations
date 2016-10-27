@@ -26,6 +26,7 @@ shinyUI(fluidPage(
     #  textOutput("results_hashes"),
     plotOutput("plot_probability"),
     plotOutput("plot_simulations_estimates"),
+    plotOutput("plot_coverage"),
     DT::dataTableOutput("averages")
   )
   
