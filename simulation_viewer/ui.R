@@ -23,8 +23,11 @@ shinyUI(fluidPage(
   
   mainPanel(
     DT::dataTableOutput("results_index"),
-  #  textOutput("results_hashes"),
-    plotOutput("plot_probability")
+    #  textOutput("results_hashes"),
+    plotOutput("plot_probability"),
+    plotOutput("plot_simulations_estimates"),
+    plotOutput("plot_coverage"),
+    DT::dataTableOutput("averages")
   )
   
   
