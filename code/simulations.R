@@ -7,20 +7,20 @@ library(peRiodic)
 library(ROCR)
 library(digest)
 library(doParallel)
-options(cores=3)
+options(cores=6)
 registerDoParallel()
 
 ##### SET UP THE SIMULATION PARAMETERS AND RESULTS PLACEHOLDER #################
-B_variants <- c(100, 1000, 10000) #, 5000)
+B_variants <- c(100, 1000, 5000) #, 10000)
 n_variants <- c(100)
-n.new_variants <- c(100)
-nk_variants <- c(5, 6) #, 7, 8)
-knots_variants <- list(NULL)
+n.new_variants <- c(1000)
+nk_variants <- c(5, 6, 7, 8)
+knots_variants <- list(c(NULL), c(0.025, 0.25, 0.5, 0.75, 0.975))
 par1sin_variants <- c(1)
 par2sin_variants <- c(0.25)
 par3sin_variants <- c(0.25)
-par4sin_variants <- c(0) # 1:4 # all interesting variants for par4sin (how many cycles in [0, 1])
-par5sin_variants <- c(0) #, 0.25, 0.5, 0.75) # variants for par5sin (curve offset in multiples of 2*Pi)
+par4sin_variants <- c(1:4) # 1:4 # all interesting variants for par4sin (how many cycles in [0, 1])
+par5sin_variants <- c(0, 0.25, 0.5, 0.75) # variants for par5sin (curve offset in multiples of 2*Pi)
 tmax_variants <- c(1, 2, 365)
 add_trend_variants <- c(TRUE, FALSE)
 par1trend_variants <- c(1)
@@ -30,7 +30,7 @@ par4trend_variants <- c(0, 1/10, 1/5)
 par5trend_variants <- c(0)
 max_prob_value_variants <- c(0.95)
 min_prob_variants <- c(0.05)
-quantiles.cs_variants <- list(c(NULL)) # list(c(NULL), c(0.05, 0.25, 0.5, 0.75, 0.95)) 
+quantiles.cs_variants <- list(c(NULL)) # list(c(NULL), c(0.05, 0.25, 0.5, 0.75, 0.95))  #  # 
 # construct all interesting combinations of par4sin nad par5sin
 results_index_temp <- expand.grid(
   B=B_variants,
@@ -61,7 +61,7 @@ results_index_temp[, "hash"] <- unlist(hashes)
 # results_list <- list() # placeholder for results
 # folder to save results into
 getwd()
-results_folder <- "./results/simulations_individualy"
+results_folder <- "./results/simulations_individualy_WO_models"
 # merge with existing results_index
 load(file=paste0(results_folder, "/results_index.Rdata")) # load existing
 str(results_index)
