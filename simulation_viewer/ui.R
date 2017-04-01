@@ -18,7 +18,9 @@ shinyUI(fluidPage(
   
   sidebarPanel(
     uiOutput("select_folder"),
-    uiOutput("select_simluation")
+    uiOutput("select_simluation"),
+    uiOutput("select_B_variants"),
+    uiOutput("select_knots_variants")
   ),
   
   mainPanel(
@@ -27,7 +29,8 @@ shinyUI(fluidPage(
     plotOutput("plot_probability"),
     plotOutput("plot_simulations_estimates"),
     plotOutput("plot_coverage"),
-    DT::dataTableOutput("averages")
+    DT::dataTableOutput("averages"),
+    DT::dataTableOutput("power_stats")
   )
   
   

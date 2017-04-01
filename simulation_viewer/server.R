@@ -9,10 +9,11 @@
 
 library(shiny)
 library(DT)
+library(dplyr)
 
 # Define server logic required to draw a histogram
 shinyServer(function(input, output) {
-   
+  
   output$select_folder <- renderUI({
     # read folders holding results
     folders <- list.dirs("../results")
@@ -26,18 +27,44 @@ shinyServer(function(input, output) {
   results_index <- reactive({
     # read results in selected folder
     load(file = paste0(input$selected_folder, "/results_index.Rdata"))
+    results_index$knots <- as.character(results_index$knots)
     return(results_index)
   })
   
+  # TODO: add menus on the left: B, knots
+  
+  output$select_B_variants <- renderUI({
+    B_variants <- unique(results_index()$B)
+    
+    selectInput("selected_B_variant",
+                label = "Filter on B (number of simulations):",
+                choices = B_variants)
+  })
+  
+  output$select_knots_variants <- renderUI({
+    knot_variants <- unique(results_index()$knots)
+    
+    selectInput("selected_knot_variant",
+                label = "Filter on knot variant:",
+                choices = knot_variants)
+
+  })
+  
+  results_index_filtered <- reactive({
+    result <- results_index()[(results_index()[, "knots"] == input$selected_knot_variant & 
+                                 results_index()[, "B"] == input$selected_B_variant), ]
+    return(result)
+  })
+  
   output$results_index <- DT::renderDataTable({
-    result <- datatable(results_index(),
+    result <- datatable(results_index_filtered(),
                         filter = 'top',
                         selection = "single")
     return(result)
   }, server = TRUE)
-
+  
   results <- reactive({
-   # browser()
+    # browser()
     
     selected <- input$results_index_rows_selected
     hashes <- results_index()[selected, "hash"]
@@ -87,7 +114,7 @@ shinyServer(function(input, output) {
       to = results()$tmax,
       main = "Probability function used in simulation",
       ylab = "Probability")
-        
+    
   })
   
   output$averages <- DT::renderDataTable({
@@ -102,6 +129,25 @@ shinyServer(function(input, output) {
       cs.per = c(brier.cs.per.train, brier.cs.per, AUCTrainEst.cs.per, AUCNewEst.cs.per, cal.cs.per.1, cal.cs.per.2, lrt.p.value.cs.per.train, score.p.value.cs.per.train),
       row.names = c("Brier - train", "Brier - test", "AUC - train", "AUC - test", "Calibration intercept", "Calibration slope", "LRT P value", "Score P value")
     ) 
+    
+  })
+  
+  output$power_stats <- DT::renderDataTable({
+    power_lrt_rcs <- sum(results()$my.res[,"lrt.p.value.rcs.train"] < 0.05) / length(results()$my.res[,"lrt.p.value.rcs.train"])
+    power_lrt_rcs.per <- sum(results()$my.res[,"lrt.p.value.rcs.per.train"] < 0.05) / length(results()$my.res[,"lrt.p.value.rcs.per.train"])
+    power_lrt_cs.per <- sum(results()$my.res[,"lrt.p.value.cs.per.train"] < 0.05) / length(results()$my.res[,"lrt.p.value.cs.per.train"])
+    power_score_rcs <- sum(results()$my.res[,"score.p.value.rcs.train"] < 0.05) / length(results()$my.res[,"score.p.value.rcs.train"])
+    power_score_rcs.per <- sum(results()$my.res[,"score.p.value.rcs.per.train"] < 0.05) / length(results()$my.res[,"score.p.value.rcs.per.train"])
+    power_score_cs.per <- sum(results()$my.res[,"score.p.value.cs.per.train"] < 0.05) / length(results()$my.res[,"score.p.value.cs.per.train"])
+    
+    power_dt <- data.frame(
+      rcs = c(power_lrt_rcs, power_score_rcs),
+      rcs.per = c(power_lrt_rcs.per, power_score_rcs.per),
+      cs.per = c(power_lrt_cs.per, power_score_cs.per),
+      row.names = c("LRT P (<0.05)", "Score P (<0.05)")
+    )
+    
+    return(power_dt)
   })
   
   output$plot_simulations_estimates <- renderPlot({
